@@ -20,3 +20,7 @@ To write data from the bag file into  a CSV for training, run the following:
 
 Similar to the merge bag script, you will be prompted to input the prefix of the bag you want to convert. For example, if you input the prefix `fetch_test`, then a bag of the form `fetch_test_<>_combined.bag` will be converted to CSV.
 
+
+## CSV preprocessing for RL experiments
+
+`Preprocess.py` will take the generated raw csv files and combine them into a dataset that can by used with [Minerva](https://github.com/takuseno/minerva) for offline deep RL experiments
