@@ -23,4 +23,4 @@ Similar to the merge bag script, you will be prompted to input the prefix of the
 
 ## CSV preprocessing for RL experiments
 
-`Preprocess.py` will take the generated raw csv files and combine them into a dataset that can by used with [Minerva](https://github.com/takuseno/minerva) for offline deep RL experiments
+`Preprocess.py` will take the raw csv files generated from the bag files, process them (e.g., calculate a combined reward value), and combine the processed files into a dataset that can by used with [Minerva](https://github.com/takuseno/minerva) for offline deep RL experiments (requires pandas).
