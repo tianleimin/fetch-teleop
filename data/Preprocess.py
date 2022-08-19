@@ -9,27 +9,27 @@ import numpy as np
 from itertools import product
 
 
-# data type of non-numerical columns in the raw csv files
-int_cols = ['episode']
-cat_cols = ['status', 'handover quality', 'handover type', 'arm status', 'base status', 'handover status']
-# coded actions for arm status and handover status action pairs
-action_encoding = {
-    'STATIONARY+MIDDLE' : 0,
-    'REACHING+MIDDLE' : 1,
-    'TUCKING+MIDDLE' : 2,
-    'STATIONARY+LEFT' : 3,
-    'REACHING+LEFT' : 4,
-    'TUCKING+LEFT' : 5,
-    'STATIONARY+RIGHT' : 6,
-    'REACHING+RIGHT' : 7,
-    'TUCKING+RIGHT' : 8,
-}
-# rename header of preprocessed csvs to use with the Minerva UI
-new_header = ['episode','observation:0','observation:1','observation:2','observation:3','observation:4','observation:5','observation:6','observation:7','observation:8','observation:9','observation:10','observation:11','observation:12','observation:13','observation:14','observation:15','observation:16','observation:17','observation:18','observation:19','observation:20','observation:21','observation:22','observation:23','observation:24','observation:25','observation:26','observation:27','observation:28','observation:29','observation:30','observation:31','observation:32','observation:33','observation:34','observation:35','observation:36','observation:37','observation:38','observation:39','observation:40','observation:41','observation:42','observation:43','observation:44','observation:45','observation:46','observation:47','observation:48','observation:49','observation:50','observation:51','observation:52','observation:53','observation:54','observation:55','observation:56','observation:57','observation:58','observation:59','observation:60','observation:61','observation:62','observation:63','observation:64','observation:65','observation:66','observation:67','observation:68','observation:69','observation:70','observation:71','observation:72','observation:73','observation:74','observation:75','observation:76','observation:77','observation:78','observation:79','observation:80','observation:81','observation:82','observation:83','observation:84','observation:85','observation:86','observation:87','observation:88','observation:89','observation:90','observation:91','observation:92','observation:93','observation:94','observation:95','observation:96','observation:97','observation:98','observation:99','observation:100','action:0','reward']
-
-
 # function for preprocessing the raw csv, including computing combined rewards
+# takes in a str of the name of the raw csv to be processed (without '.csv')
 def preprocess(raw_data):
+    # data type of non-numerical columns in the raw csv files
+    int_cols = ['episode']
+    cat_cols = ['status', 'handover quality', 'handover type', 'arm status', 'base status', 'handover status']
+    # coded actions for arm status and handover status action pairs
+    action_encoding = {
+        'STATIONARY+MIDDLE' : 0,
+        'REACHING+MIDDLE' : 1,
+        'TUCKING+MIDDLE' : 2,
+        'STATIONARY+LEFT' : 3,
+        'REACHING+LEFT' : 4,
+        'TUCKING+LEFT' : 5,
+        'STATIONARY+RIGHT' : 6,
+        'REACHING+RIGHT' : 7,
+        'TUCKING+RIGHT' : 8,
+    }
+    # rename header of preprocessed csvs to use with the Minerva UI
+    new_header = ['episode','observation:0','observation:1','observation:2','observation:3','observation:4','observation:5','observation:6','observation:7','observation:8','observation:9','observation:10','observation:11','observation:12','observation:13','observation:14','observation:15','observation:16','observation:17','observation:18','observation:19','observation:20','observation:21','observation:22','observation:23','observation:24','observation:25','observation:26','observation:27','observation:28','observation:29','observation:30','observation:31','observation:32','observation:33','observation:34','observation:35','observation:36','observation:37','observation:38','observation:39','observation:40','observation:41','observation:42','observation:43','observation:44','observation:45','observation:46','observation:47','observation:48','observation:49','observation:50','observation:51','observation:52','observation:53','observation:54','observation:55','observation:56','observation:57','observation:58','observation:59','observation:60','observation:61','observation:62','observation:63','observation:64','observation:65','observation:66','observation:67','observation:68','observation:69','observation:70','observation:71','observation:72','observation:73','observation:74','observation:75','observation:76','observation:77','observation:78','observation:79','observation:80','observation:81','observation:82','observation:83','observation:84','observation:85','observation:86','observation:87','observation:88','observation:89','observation:90','observation:91','observation:92','observation:93','observation:94','observation:95','observation:96','observation:97','observation:98','observation:99','observation:100','action:0','reward']
+
     # read csv into dataframe
     df = pd.read_csv((raw_data + '.csv'), header = 0)
     # specify data type of columns
@@ -124,27 +124,45 @@ def preprocess(raw_data):
     processed_minerva_f = raw_data + '_processed_minerva' + '.csv'
     df_minerva.columns = new_header
     df_minerva.to_csv(processed_minerva_f, index=False)
-    print('Preprocessing finished: output file ', processed_minerva_f)
+    print('Preprocessing finished: output file', processed_minerva_f)
     #df_seg_minerva.columns = new_header
     #df_seg_minerva.to_csv(processed_minerva_f, index=False)
 
 
+# function for combining processed files with an episode offset
+# takes in a list of all processed csv to be concatenated
+def combcsv(participants):
+    # episode offset for concatenating processed files
+    offset = 0
+    # list of processed df 
+    list_comb = []
+    # name of combined dataset file
+    combined_csv = 'data/combined_minerva.csv'
+    # concatenate
+    for participant in participants:
+        proc_data_each = 'data/' + participant + '_processed_minerva' + '.csv'
+        df_each = pd.read_csv(proc_data_each, header = 0)
+        # offset episode start count to continue after the previous csv
+        df_each['episode'] = df_each['episode'] + offset
+        offset = max(df_each['episode']) + 1
+        list_comb.append(df_each)
+        print('Added episode offset:', participant)
+    print('Concatenating...')
+    df_comb = pd.concat(list_comb)
+    print('Saving concatenated dataset...')
+    df_comb.to_csv(combined_csv, index=False)
+
+
+# main loop
 # list of csv files to be processed
 participants = ['p1_2022-07-25', 'p2_2022-08-03', 'p3_2022-08-04', 'p4_2022-08-10', 'p5_2022-08-12', 'p6_2022-08-15', 'p7_2022-08-15']
-list_comb = []
-combined_csv = 'data/P1-7_combined_minerva.csv'
-# main loop
 if __name__ == "__main__":
     # preprocess individual participants
     for participant in participants:
         raw_data = 'data/' + participant
         preprocess(raw_data)
+    print('All raw data processed.')
     # concatenate preprocessed data into one csv
-    for participant in participants:
-        proc_data_each = 'data/' + participant + '_processed_minerva' + '.csv'
-        df_each = pd.read_csv(proc_data_each, header = 0)
-        list_comb.append(df_each)
-    df_comb = pd.concat(list_comb)
-    df_comb.to_csv(combined_csv, index=False)
+    combcsv(participants)
     print('All processed files concatenated.')
 
