@@ -129,9 +129,9 @@ def preprocess(raw_data):
     #df_seg_minerva.to_csv(processed_minerva_f, index=False)
 
 
-# function for combining processed files with an episode offset
+# function for combining processed files with an optional episode offset
 # takes in a list of all processed csv to be concatenated
-def combcsv(participants):
+def combcsv(participants, ep_offset = False):
     # episode offset for concatenating processed files
     offset = 0
     # list of processed df 
@@ -142,11 +142,16 @@ def combcsv(participants):
     for participant in participants:
         proc_data_each = 'data/' + participant + '_processed_minerva' + '.csv'
         df_each = pd.read_csv(proc_data_each, header = 0)
-        # offset episode start count to continue after the previous csv
-        df_each['episode'] = df_each['episode'] + offset
-        offset = max(df_each['episode']) + 1
+        # offset episode counter at the start of current csv to continue after the previous csv
+        if ep_offset:
+            df_each['episode'] = df_each['episode'] + offset
+            offset = max(df_each['episode']) + 1
+        # restart episode counter for each participant at 0
+        # Minerva distinguishes ep No.0 of P1 and ep No.0 of P2 as different episodes
+        else:
+            pass
         list_comb.append(df_each)
-        print('Added episode offset:', participant)
+        print('Read processed data:', participant)
     print('Concatenating...')
     df_comb = pd.concat(list_comb)
     print('Saving concatenated dataset...')
@@ -162,7 +167,7 @@ if __name__ == "__main__":
         raw_data = 'data/' + participant
         preprocess(raw_data)
     print('All raw data processed.')
-    # concatenate preprocessed data into one csv
-    combcsv(participants)
+    # concatenate preprocessed data into one csv with optional episode count offset
+    combcsv(participants, ep_offset = False)
     print('All processed files concatenated.')
 
