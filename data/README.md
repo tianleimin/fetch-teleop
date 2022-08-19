@@ -20,6 +20,8 @@ To write data from the bag file into  a CSV for training, run the following:
 
 Similar to the merge bag script, you will be prompted to input the prefix of the bag you want to convert. For example, if you input the prefix `fetch_test`, then a bag of the form `fetch_test_<>_combined.bag` will be converted to CSV.
 
+An explanation to the columns in the generated csv file can be found in `csv_header_explained.txt`
+
 
 ## CSV preprocessing for RL experiments
 
