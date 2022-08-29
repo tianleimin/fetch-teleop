@@ -26,3 +26,6 @@ An explanation to the columns in the generated csv file can be found in `csv_hea
 ## CSV preprocessing for RL experiments
 
 `Preprocess.py` will take the raw csv files generated from the bag files, process them (e.g., calculate a combined reward value), and combine the processed files into a dataset that can by used with [Minerva](https://github.com/takuseno/minerva) for offline deep RL experiments (requires pandas).
+
+## Basic Full Auto Mode
+`example_auto.csv` can be played on repeat by the teleop program to achieve a basic full auto mode, in which the robot never waits and always performs default middle positioned handover
