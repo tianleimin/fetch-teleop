@@ -54,6 +54,20 @@ def preprocess(raw_data):
     df.iloc[:,28:36] = df.iloc[:,28:36].apply(lambda x: (60+x)/ 60, axis=0) # OAK-D emotions
     df.iloc[:,38:46] = df.iloc[:,38:46].apply(lambda x: (60+x)/ 60, axis=0) # Fetch emotions
     
+    # replace Fetch predictions with OAK-D predictions when it's not facing the participant
+    # use status label to find when the robot is facing the participant
+    facing_participant = ['TO PARTICIPANT', 'PARTICIPANT HANDOVER']
+    not_facing_participant = ['TO OPERATOR', 'ROTATE TO OPERATOR', 'ROTATE TO PARTICIPANT', 'OPERATOR HANDOVER']
+    emo_list = ['neutral','happy','sad','surprise','fear','disgust','anger','contempt','valence','arousal']
+    #df1 = df.iloc[30020:30070]
+    # replace Fetch emotions with OAK-D emotions
+    for index, row in df.iterrows():
+        if row['status'] in not_facing_participant:
+            for emo in emo_list:
+                df.loc[index,str(emo+' (fetch)')] = df.loc[index,str(emo+' (global)')]
+        else:
+            pass
+    
     # state observations are OAK-D pose estimations in columns [48:148] and an added task progress (numerical)
     df['task progress'] = df['episode'] / max(df['episode'])
     # state observation in a new dataframe
