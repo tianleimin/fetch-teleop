@@ -39,7 +39,7 @@ If you want to visualise the Fetch model in RViz from ROS bag data
     rosparam set robot_description -t /opt/ros/melodic/share/fetch_description/robots/fetch.urdf
 
 
-### Replay data (Fetch)
+### Replay data and basic full auto mode (Fetch)
 
 Data that can be replayed is of the same form of the CSV produced from `bag_to_csv.py` (see `../data/`). For example, you can choose data from a single episode an make a CSV using that data to replay robot motions from that episode.
 
@@ -49,6 +49,8 @@ Data that can be replayed is of the same form of the CSV produced from `bag_to_c
 When prompted (it might be hard to see the prompt under all the other console text), input the prefix of the file you want to play the data from. 
 
 You can press the **L1** button to toggle on and off pause.
+
+An example episode `example_auto_middle.csv` is provided under `\data`. Using this csv the robot can run the basic full auto mode, in which it never waits and always performs handover in the default middle position.
 
 
 # Controls
