@@ -11,7 +11,7 @@ from itertools import product
 
 # function for preprocessing the raw csv, including computing combined rewards
 # takes in a str of the name of the raw csv to be processed (without '.csv')
-def preprocess(raw_data):
+def preprocess(raw_data, minerva_header=False):
     # data type of non-numerical columns in the raw csv files
     int_cols = ['episode']
     cat_cols = ['status', 'handover quality', 'handover type', 'arm status', 'base status', 'handover status']
@@ -44,8 +44,9 @@ def preprocess(raw_data):
     # fill missing values in the manually entered handover quality and type columns
     df['handover quality'] = df['handover quality'].cat.add_categories('NEUTRAL')
     df['handover quality'].fillna('NEUTRAL', inplace =True)
-    df['handover type'] = df['handover type'].cat.add_categories('NEITHER')
-    df['handover type'].fillna('NEITHER', inplace =True) 
+    #df['handover type'] = df['handover type'].cat.add_categories('NEITHER')
+    #df['handover type'].fillna('NEITHER', inplace =True)
+    df['handover type'].fillna('ROBOT TO HUMAN', inplace =True) 
 
     # normalise categorical emotion prediction values
     # categorical emotion values are network weights at output layer
@@ -134,10 +135,14 @@ def preprocess(raw_data):
     df_seg_minerva = pd.concat([df_seg['episode'], df_seg_state, df_seg_action, df_seg_reward], axis=1)
     
     
-    # save in the format of Minerva UI
-    processed_minerva_f = raw_data + '_processed_minerva' + '.csv'
-    df_minerva.columns = new_header
-    df_minerva.to_csv(processed_minerva_f, index=False)
+    # save in the format of Minerva UI if needed
+    if minerva_header:
+        processed_minerva_f = raw_data + '_processed_minerva' + '.csv'
+        df_minerva.columns = new_header
+        df_minerva.to_csv(processed_minerva_f, index=False)
+    else:
+        processed_minerva_f = raw_data + '_processed' + '.csv'
+        df_minerva.to_csv(processed_minerva_f, index=False)
     print('Preprocessing finished: output file', processed_minerva_f)
     #df_seg_minerva.columns = new_header
     #df_seg_minerva.to_csv(processed_minerva_f, index=False)
@@ -145,16 +150,19 @@ def preprocess(raw_data):
 
 # function for combining processed files with an optional episode offset
 # takes in a list of all processed csv to be concatenated
-def combcsv(participants, ep_offset = False):
+def combcsv(participants, f_name, ep_offset = False, minerva_header=False):
     # episode offset for concatenating processed files
     offset = 0
     # list of processed df 
     list_comb = []
     # name of combined dataset file
-    combined_csv = 'data/combined_minerva.csv'
+    combined_csv = 'data/combined_' + f_name + '.csv'
     # concatenate
     for participant in participants:
-        proc_data_each = 'data/' + participant + '_processed_minerva' + '.csv'
+        if minerva_header:
+            proc_data_each = 'data/' + participant + '_processed_minerva' + '.csv'
+        else:
+            proc_data_each = 'data/' + participant + '_processed' + '.csv'
         df_each = pd.read_csv(proc_data_each, header = 0)
         # offset episode counter at the start of current csv to continue after the previous csv
         if ep_offset:
@@ -174,14 +182,36 @@ def combcsv(participants, ep_offset = False):
 
 # main loop
 # list of csv files to be processed
-participants = ['p1_2022-07-25', 'p2_2022-08-03', 'p3_2022-08-04', 'p4_2022-08-10', 'p5_2022-08-12', 'p6_2022-08-15', 'p7_2022-08-15']
+# all data
+participants = ['p1_2022-07-25', 'p2_2022-08-03', 'p3_2022-08-04', 'p4_2022-08-10', 'p5_2022-08-12', 
+                'p6_2022-08-15', 'p7_2022-08-15', 'p8_2022-08-19', 'p9_2022-08-22', 'p10_2022-08-26', 
+                'p11_2022-08-29', 'p12_2022-08-29', 'p13_2022-08-29', 'p14_2022-08-31', 'p15_2022-09-02', 
+                'p16_2022-09-05', 'p17_2022-09-06', 'p18_2022-09-07', 'p19_2022-09-08', 'p20_2022-09-09']
+# training and test sets for offline RL experiments
+participants_RL_trn = ['p1_2022-07-25', 'p2_2022-08-03', 'p3_2022-08-04', 'p4_2022-08-10', 'p5_2022-08-12', 
+                       'p6_2022-08-15', 'p7_2022-08-15', 'p8_2022-08-19', 'p9_2022-08-22', 'p10_2022-08-26', 
+                       'p11_2022-08-29', 'p12_2022-08-29', 'p13_2022-08-29', 'p14_2022-08-31', 'p15_2022-09-02']
+participants_RL_tst = ['p16_2022-09-05', 'p17_2022-09-06', 'p18_2022-09-07', 'p19_2022-09-08', 'p20_2022-09-09']
+# tranining, development, and test sets for LSTM experiments
+participants_ML_trn = ['p1_2022-07-25', 'p2_2022-08-03', 'p3_2022-08-04', 'p4_2022-08-10', 'p5_2022-08-12', 
+                       'p6_2022-08-15', 'p7_2022-08-15', 'p8_2022-08-19', 'p9_2022-08-22', 'p10_2022-08-26', 
+                       'p11_2022-08-29', 'p12_2022-08-29', 'p13_2022-08-29', 'p14_2022-08-31']
+participants_ML_dev = ['p15_2022-09-02', 'p16_2022-09-05', 'p17_2022-09-06']
+participants_ML_tst = ['p18_2022-09-07', 'p19_2022-09-08', 'p20_2022-09-09']
+
+
 if __name__ == "__main__":
     # preprocess individual participants
     for participant in participants:
         raw_data = 'data/' + participant
-        preprocess(raw_data)
+        preprocess(raw_data, minerva_header=True)
+        preprocess(raw_data, minerva_header=False)
     print('All raw data processed.')
     # concatenate preprocessed data into one csv with optional episode count offset
-    combcsv(participants, ep_offset = False)
+    combcsv(participants_RL_trn, 'RL_trn', ep_offset = False, minerva_header=True)
+    combcsv(participants_RL_tst, 'RL_tst', ep_offset = False, minerva_header=True)
+    combcsv(participants_ML_trn, 'ML_trn', ep_offset = False, minerva_header=False)
+    combcsv(participants_ML_dev, 'ML_dev', ep_offset = False, minerva_header=False)
+    combcsv(participants_ML_tst, 'ML_tst', ep_offset = False, minerva_header=False)
     print('All processed files concatenated.')
 
