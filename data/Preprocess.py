@@ -85,13 +85,13 @@ def preprocess(raw_data, minerva_header=False):
     
     # emotional reward
     # OAK-D categorical emotion sum, there are 8 emotioanl classes in total
-    df['emotion (global)'] = (df['neutral (global)'] + df['happy (global)'] + df['contempt (global)'])/3 \
-                             - 0.2 * (df['sad (global)'] + df['surprise (global)'] + df['fear (global)'] \
-                             + df['disgust (global)'] + df['anger (global)'])
+    df['emotion (global)'] = (df['neutral (global)'] + df['happy (global)'])/2 \
+                             - (df['sad (global)'] + df['surprise (global)'] + df['fear (global)'] \
+                             + df['disgust (global)'] + df['anger (global)'] + df['contempt (global)'])/6
     # Fetch categorical emotion sum
-    df['emotion (fetch)'] = (df['neutral (fetch)'] + df['happy (fetch)'] + df['contempt (fetch)'])/3 \
-                             - 0.2 * (df['sad (fetch)'] + df['surprise (fetch)'] + df['fear (fetch)'] \
-                             + df['disgust (fetch)'] + df['anger (fetch)'])
+    df['emotion (fetch)'] = (df['neutral (fetch)'] + df['happy (fetch)'])/2 \
+                             - (df['sad (fetch)'] + df['surprise (fetch)'] + df['fear (fetch)'] \
+                             + df['disgust (fetch)'] + df['anger (fetch)'] + df['contempt (fetch)'])/6
 
     # combined emotional reward
     df['emotional reward'] = (df['emotion (global)'] + df['arousal (global)'] + df['valence (global)'] \
