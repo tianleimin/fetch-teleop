@@ -23,7 +23,7 @@ Similar to the merge bag script, you will be prompted to input the prefix of the
 An explanation to the columns in the generated csv file can be found in `csv_header_explained.txt`
 
 
-## CSV preprocessing for RL experiments
+## CSV preprocessing for ML experiments
 
 `Preprocess.py` will take the raw csv files generated from the bag files, process them (e.g., calculate a combined reward value), and combine the processed files into a dataset (requires pandas).
 
