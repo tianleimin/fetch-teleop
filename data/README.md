@@ -27,5 +27,7 @@ An explanation to the columns in the generated csv file can be found in `csv_hea
 
 `Preprocess.py` will take the raw csv files generated from the bag files, process them (e.g., calculate a combined reward value), and combine the processed files into a dataset (requires pandas).
 
+`BLSTM_example.ipynb` shows an example implementation of the BLSTM classification model
+
 ## Basic Full Auto Mode
 `example_auto_middle.csv` can be played on repeat by the teleop program to achieve a basic full auto mode, in which the robot never waits and always performs default middle positioned handover
