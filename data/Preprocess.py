@@ -73,7 +73,6 @@ def preprocess(raw_data, minerva_header=False):
     df['task progress'] = df['episode'] / max(df['episode'])
     # state observation in a new dataframe
     df_state = df.iloc[:,48:149]
-    df_state_emo = df.iloc[:,28:149] # state with emotion in there
     
     # actions are categorical values in the 'arm status' and 'handover status' columns
     # 'base status' excluded for simplicity
@@ -119,7 +118,6 @@ def preprocess(raw_data, minerva_header=False):
     
     # only keeping columns relevant
     df_time = df[['time (s)', 'episode', 'step']]
-    df_ML = pd.concat([df_time, df_state_emo, df['handover reward'], df['emotional reward'], df['combined reward async'], df['base status'], df['arm status'], df['handover status']], axis=1)
     df_tidy = pd.concat([df_time, df_state, df['action pair ID'], df['combined reward async']], axis=1)
     df_minerva = pd.concat([df['episode'], df_state, df['action pair ID'], df['combined reward async']], axis=1)
     
@@ -127,32 +125,28 @@ def preprocess(raw_data, minerva_header=False):
     # State machine for overall robot status:
     # To participant -> Participant handover -> Rotate to operator -> To operator -> Operator handover -> Rotate to participant
     # extract rows with 'status' = 'PARTICIPANT HANDOVER'
-    #df_seg = df.loc[df['status'] == 'PARTICIPANT HANDOVER']
+    df_seg = df.loc[df['status'] == 'PARTICIPANT HANDOVER']
     # only keeping columns relevant
-    #df_seg_time = df_seg[['time (s)', 'episode', 'step']]
-    #df_seg_state = df_seg.iloc[:,48:149]
-    #df_seg_state_emo = df.iloc[:,28:149] # state with emotion in there
-    #df_seg_action = df_seg['action pair ID']
-    #df_seg_reward = df_seg['combined reward async']
-    #df_seg_tidy = pd.concat([df_seg_time, df_seg_state, df_seg_action, df_seg_reward], axis=1)
-    #df_seg_minerva = pd.concat([df_seg['episode'], df_seg_state, df_seg_action, df_seg_reward], axis=1)
-    #df_seg_ML = pd.concat([df_seg_time, df_seg_state_emo, df_seg['handover reward'], df_seg['emotional reward'], df_seg['combined reward async'], df_seg['base status'], df_seg['arm status'], df_seg['handover status']], axis=1)
-
+    df_seg_time = df_seg[['time (s)', 'episode', 'step']]
+    df_seg_state = df_seg.iloc[:,48:149]
+    df_seg_action = df_seg['action pair ID']
+    df_seg_reward = df_seg['combined reward async']
+    df_seg_tidy = pd.concat([df_seg_time, df_seg_state, df_seg_action, df_seg_reward], axis=1)
+    df_seg_minerva = pd.concat([df_seg['episode'], df_seg_state, df_seg_action, df_seg_reward], axis=1)
     
     
     # save in the format of Minerva UI if needed
     if minerva_header:
-        processed_f = raw_data + '_processed_minerva' + '.csv'
+        processed_minerva_f = raw_data + '_processed_minerva' + '.csv'
         df_minerva.columns = new_header
-        df_minerva.to_csv(processed_f, index=False)
-        #df_seg_minerva.columns = new_header
-        #df_seg_minerva.to_csv(processed_f, index=False)
+        df_minerva.to_csv(processed_minerva_f, index=False)
     else:
-        processed_f = raw_data + '_processed' + '.csv'
-        df_ML.to_csv(processed_f, index=False)
-        #df_seg_ML.to_csv(processed_f, index=False)
-    print('Preprocessing finished: ', raw_data)
-    
+        processed_minerva_f = raw_data + '_processed' + '.csv'
+        df_minerva.to_csv(processed_minerva_f, index=False)
+    print('Preprocessing finished: output file', processed_minerva_f)
+    #df_seg_minerva.columns = new_header
+    #df_seg_minerva.to_csv(processed_minerva_f, index=False)
+
 
 # function for combining processed files with an optional episode offset
 # takes in a list of all processed csv to be concatenated
@@ -162,13 +156,13 @@ def combcsv(participants, f_name, ep_offset = False, minerva_header=False):
     # list of processed df 
     list_comb = []
     # name of combined dataset file
-    combined_csv = 'data/ML/combined_' + f_name + '.csv'
+    combined_csv = 'data/combined_' + f_name + '.csv'
     # concatenate
     for participant in participants:
         if minerva_header:
-            proc_data_each = 'data/ML/' + participant + '_processed_minerva' + '.csv'
+            proc_data_each = 'data/' + participant + '_processed_minerva' + '.csv'
         else:
-            proc_data_each = 'data/ML/' + participant + '_processed' + '.csv'
+            proc_data_each = 'data/' + participant + '_processed' + '.csv'
         df_each = pd.read_csv(proc_data_each, header = 0)
         # offset episode counter at the start of current csv to continue after the previous csv
         if ep_offset:
@@ -205,19 +199,46 @@ participants_ML_trn = ['p1_2022-07-25', 'p2_2022-08-03', 'p3_2022-08-04', 'p4_20
 participants_ML_dev = ['p15_2022-09-02', 'p16_2022-09-05', 'p17_2022-09-06']
 participants_ML_tst = ['p18_2022-09-07', 'p19_2022-09-08', 'p20_2022-09-09']
 
+# for 5-fold cross-validation experiments
+cv_1 = participants[0:4]
+cv_2 = participants[4:8]
+cv_3 = participants[8:12]
+cv_4 = participants[12:16]
+cv_5 = participants[16:]
+ML_trn_cv_1 = cv_2 + cv_3 + cv_4 + cv_5
+ML_tst_cv_1 = cv_1
+ML_trn_cv_2 = cv_1 + cv_3 + cv_4 + cv_5
+ML_tst_cv_2 = cv_2
+ML_trn_cv_3 = cv_1 + cv_2 + cv_4 + cv_5
+ML_tst_cv_3 = cv_3
+ML_trn_cv_4 = cv_1 + cv_2 + cv_3 + cv_5
+ML_tst_cv_4 = cv_4
+ML_trn_cv_5 = cv_1 + cv_2 + cv_3 + cv_4
+ML_tst_cv_5 = cv_5
+
 
 if __name__ == "__main__":
-    # preprocess individual participants
-    for participant in participants:
-        raw_data = 'data/ML/' + participant
-        preprocess(raw_data, minerva_header=True)
-        preprocess(raw_data, minerva_header=False)
-    print('All raw data processed.')
+#     # preprocess individual participants
+#     for participant in participants:
+#         raw_data = 'data/' + participant
+#         preprocess(raw_data, minerva_header=True)
+#         preprocess(raw_data, minerva_header=False)
+#     print('All raw data processed.')
     # concatenate preprocessed data into one csv with optional episode count offset
-    combcsv(participants_RL_trn, 'RL_trn', ep_offset = False, minerva_header=True)
-    combcsv(participants_RL_tst, 'RL_tst', ep_offset = False, minerva_header=True)
-    combcsv(participants_ML_trn, 'ML_trn', ep_offset = False, minerva_header=False)
-    combcsv(participants_ML_dev, 'ML_dev', ep_offset = False, minerva_header=False)
-    combcsv(participants_ML_tst, 'ML_tst', ep_offset = False, minerva_header=False)
+#     combcsv(participants_RL_trn, 'RL_trn', ep_offset = False, minerva_header=True)
+#     combcsv(participants_RL_tst, 'RL_tst', ep_offset = False, minerva_header=True)
+#     combcsv(participants_ML_trn, 'ML_trn', ep_offset = False, minerva_header=False)
+#     combcsv(participants_ML_dev, 'ML_dev', ep_offset = False, minerva_header=False)
+#     combcsv(participants_ML_tst, 'ML_tst', ep_offset = False, minerva_header=False)
+    combcsv(ML_trn_cv_1, 'ML_trn_cv_1', ep_offset = False, minerva_header=False)
+    combcsv(ML_tst_cv_1, 'ML_tst_cv_1', ep_offset = False, minerva_header=False)
+    combcsv(ML_trn_cv_2, 'ML_trn_cv_2', ep_offset = False, minerva_header=False)
+    combcsv(ML_tst_cv_2, 'ML_tst_cv_2', ep_offset = False, minerva_header=False)
+    combcsv(ML_trn_cv_3, 'ML_trn_cv_3', ep_offset = False, minerva_header=False)
+    combcsv(ML_tst_cv_3, 'ML_tst_cv_3', ep_offset = False, minerva_header=False)
+    combcsv(ML_trn_cv_4, 'ML_trn_cv_4', ep_offset = False, minerva_header=False)
+    combcsv(ML_tst_cv_4, 'ML_tst_cv_4', ep_offset = False, minerva_header=False)
+    combcsv(ML_trn_cv_5, 'ML_trn_cv_5', ep_offset = False, minerva_header=False)
+    combcsv(ML_tst_cv_5, 'ML_tst_cv_5', ep_offset = False, minerva_header=False)
     print('All processed files concatenated.')
 
