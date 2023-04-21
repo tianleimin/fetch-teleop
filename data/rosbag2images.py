@@ -36,9 +36,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, bar_len
     filled_length = int(round(bar_length * iteration / float(total)))
     bar = '█' * filled_length + '-' * (bar_length - filled_length)
 
-    sys.stdout.write('\033[F')  # Move cursor up one line
-    sys.stdout.write('\033[K')  # Clear the line after the cursor
-    sys.stdout.write('%s |%s| %s%s %s\r' % (prefix, bar, percents, '%', suffix))
+    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percents, '%', suffix))
     sys.stdout.flush()
 
 # Print ROS bag info and save frames as images
@@ -58,7 +56,7 @@ def saveFrame(pid, camera):
 
     bag_file = str('bags/'+pid+'.bag') # input bag file
     output_dir = str('images_'+camera+'/'+pid+'/') # output directory
-    print ("\nExtracting images from %s on topic %s into %s" % (bag_file, image_topic, output_dir))
+    print ("\nExtracting frames from %s camera feed in participant %s" % (camera, pid))
 
     # Create output directory if does not exist
     if not os.path.exists(output_dir):
@@ -103,10 +101,10 @@ def saveFrame(pid, camera):
             	print ("issue saving frame %i, skipped" % count)
             	pass
         count += 1
-        printProgressBar(count, total_frames, prefix='writing frames:'.ljust(15), suffix='Complete')
+        printProgressBar(count, total_frames, prefix='\033[Fwriting frames:'.ljust(15), suffix='\n\033[K')
 
     bag.close()
-    print("\nFinished processing %s on topic %s" % (bag_file, image_topic))
+    print("\nFinished extracting frames from %s camera feed in participant %s" % (camera, pid))
 
     return
 
